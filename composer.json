@@ -1,5 +1,5 @@
 {
-    "name": "linkleak/php-ign",
+    "name": "rhayun/php-ign",
     "description": "A PHP 5.3 library for scraping IGN.",
     "keywords": ["ign"],
     "license": "MIT",
