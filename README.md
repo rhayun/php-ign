@@ -16,7 +16,7 @@ A PHP 5.3 library for scraping IGN, strongly inspired by [php-imdb](https://gith
 
 ## Usage
 
-### Get Movie
+### Get Game
 
 ```php
 <?php
