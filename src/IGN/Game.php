@@ -86,7 +86,7 @@ class Game
     {
         try {
             $summary = array();
-            $this->getCrawler()->filterXpath("//div[@id='summary']/div[@class='gameInfo']//p")->each(function ($node, $i) use (&$summary) {
+            $this->getCrawler()->filterXpath("//div[@id='summary']/div[@class='gameInfo']/p/..")->each(function ($node, $i) use (&$summary) {
                 $summary[] = trim(html_entity_decode(htmlentities($node->nodeValue)));
             });
             return $summary;
