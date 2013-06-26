@@ -92,16 +92,6 @@ class Game
         }
     }
 
-    public function getLength()
-    {
-        try {
-            preg_match('/\d+/', $this->getCrawler()->filterXpath("//h5[text()='Runtime:']/..")->text(), $matches);
-            return intval($matches[0]);
-        } catch (\Exception $e) {
-            return null;
-        }
-    }
-
     public function getGenres()
     {
         $genres = array();
