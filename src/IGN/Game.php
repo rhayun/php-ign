@@ -82,6 +82,18 @@ class Game
         }
     }
 
+    public function getSummarySplit()
+    {
+        try {
+            $summary = array();
+            $this->getCrawler()->filterXpath("//div[@id='summary']/div[@class='gameInfo']//p")->each(function ($node, $i) use (&$summary) {
+                $summary[] = htmlentities($node->nodeValue);
+            });
+            return trim(html_entity_decode($summary));
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
 
     public function getRating()
     {
