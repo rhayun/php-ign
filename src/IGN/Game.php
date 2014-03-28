@@ -18,8 +18,7 @@ class Game
     /**
      * Constructor
      *
-     * @param $imdbId
-     * @param null $title
+     * @param $url
      */
     public function __construct($url)
     {
