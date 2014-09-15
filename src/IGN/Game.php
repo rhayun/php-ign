@@ -26,6 +26,18 @@ class Game
         $this->url   = $url;
     }
 
+    public function getId()
+    {
+        try {
+            $content = file_get_contents($this->url);
+            $content = str_replace(array("\n", "\r"), "", $content);
+            preg_match('/"object1_id":(\d+),/', $content, $matches);
+            return $matches[1] ? $matches[1] : null;
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
     public function getTitle()
     {
         if (null === $this->title) {
@@ -98,6 +110,21 @@ class Game
     {
         try {
             return trim($this->getCrawler()->filter('.ignRating div.ratingValue')->text());
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    public function getBoxArt()
+    {
+        try {
+            $box_art = $this->getCrawler()->filter('.mainBoxArt img.highlight-boxArt')->extract(array('src'));
+            if(!empty($box_art)) {
+                return trim($box_art[0]);
+            }
+            else {
+                return null;
+            }
         } catch (\Exception $e) {
             return null;
         }
