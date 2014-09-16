@@ -120,7 +120,16 @@ class Game
         try {
             $box_art = $this->getCrawler()->filter('.mainBoxArt img.highlight-boxArt')->extract(array('src'));
             if(!empty($box_art)) {
-                return trim($box_art[0]);
+                $cover = trim($box_art[0]);
+                $full_cover = str_replace("_160h", "", $cover);
+                $array = get_headers($full_cover);
+                $string = $array[0];
+                if(strpos($string,"200")) {
+                    return $full_cover;
+                }
+                else {
+                    return $cover;
+                }
             }
             else {
                 return null;
