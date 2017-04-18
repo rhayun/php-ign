@@ -11,6 +11,11 @@ class Game
     protected $url;
 
     /**
+     * @var array
+     */
+    protected $headers = array('User-Agent: firefox');
+
+    /**
      * @var Crawler
      */
     protected $crawler;
@@ -24,6 +29,7 @@ class Game
     {
         $this->title = null;
         $this->url   = $url;
+        $this->getCrawler();
     }
 
     public function getId()
@@ -42,7 +48,7 @@ class Game
     {
         if (null === $this->title) {
             try {
-                $this->title = trim($this->getCrawler()->filterXpath('//h1[@class="contentTitle"]')->text());
+                $this->title = trim($this->crawler->filterXpath('//h1[@class="contentTitle"]')->text());
             } catch (\Exception $e) {
                 return null;
             }
@@ -54,7 +60,7 @@ class Game
     public function getReleaseDate()
     {
         try {
-            return $this->getCrawler()->filterXpath("//div[@class='releaseDate']/strong")->text();
+            return $this->crawler->filterXpath("//div[@class='releaseDate']/strong")->text();
         } catch (\Exception $e) {
             return null;
         }
@@ -74,7 +80,8 @@ class Game
     {
         try {
             $unixtime = $this->getReleaseDateUnixtime();
-            return date("Y", $unixtime);
+            $year = date("Y", $unixtime);
+            return $year == 1970 ? null : $year;
         } catch (\Exception $e) {
             return null;
         }
@@ -83,11 +90,21 @@ class Game
     public function getSummary()
     {
         try {
+            $summary = $this->crawler->filterXpath("//div[@id='summary']/div[@class='gameInfo']//p[1]")->text();
+            return trim(html_entity_decode($summary));
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    public function getFullSummary()
+    {
+        try {
             $summary = '';
-            $this->getCrawler()->filterXpath("//div[@id='summary']/div[@class='gameInfo']//p")->each(function ($node, $i) use (&$summary) {
+            $this->crawler->filterXpath("//div[@id='summary']/div[@class='gameInfo']//p")->each(function ($node, $i) use (&$summary) {
                 $summary .= htmlentities($node->nodeValue);
             });
-            return trim(html_entity_decode($summary));
+            return trim(strip_tags(html_entity_decode($summary)));
         } catch (\Exception $e) {
             return null;
         }
@@ -97,7 +114,7 @@ class Game
     {
         try {
             $summary = array();
-            $this->getCrawler()->filterXpath("//div[@id='summary']/div[@class='gameInfo']/p/..")->each(function ($node, $i) use (&$summary) {
+            $this->crawler->filterXpath("//div[@id='summary']/div[@class='gameInfo']/p/..")->each(function ($node, $i) use (&$summary) {
                 $summary[] = trim(html_entity_decode(htmlentities($node->nodeValue)));
             });
             return $summary;
@@ -109,7 +126,7 @@ class Game
     public function getRating()
     {
         try {
-            return trim($this->getCrawler()->filter('.ignRating div.ratingValue')->text());
+            return trim($this->crawler->filter('.ignRating div.ratingValue')->text());
         } catch (\Exception $e) {
             return null;
         }
@@ -118,7 +135,7 @@ class Game
     public function getBoxArt()
     {
         try {
-            $box_art = $this->getCrawler()->filter('.mainBoxArt img.highlight-boxArt')->extract(array('src'));
+            $box_art = $this->crawler->filter('.mainBoxArt img.highlight-boxArt')->extract(array('src'));
             if(!empty($box_art)) {
                 $cover = trim($box_art[0]);
                 $full_cover = str_replace("_160h", "", $cover);
@@ -144,7 +161,7 @@ class Game
         $genres = array();
 
         try {
-            $this->getCrawler()->filterXpath("//div[@class='gameInfo-list']/div/strong[text()='Genre']/../a[contains(@href, '/games/editors-choice')]")->each(function ($node, $i) use (&$genres) {
+            $this->crawler->filterXpath("//div[@class='gameInfo-list']/div/strong[text()='Genre']/../a[contains(@href, '/games/editors-choice')]")->each(function ($node, $i) use (&$genres) {
                 $genres[] = trim(strip_tags($node->nodeValue));
             });
         } catch (\Exception $e) {
@@ -158,7 +175,7 @@ class Game
         $publishers = array();
 
         try {
-            $this->getCrawler()->filterXpath("//div[@class='gameInfo-list']/div/strong[text()='Publisher']/../a")->each(function ($node, $i) use (&$publishers) {
+            $this->crawler->filterXpath("//div[@class='gameInfo-list']/div/strong[text()='Publisher']/../a")->each(function ($node, $i) use (&$publishers) {
                 $publishers[] = trim(strip_tags($node->nodeValue));
             });
         } catch (\Exception $e) {
@@ -172,7 +189,7 @@ class Game
         $developers = array();
 
         try {
-            $this->getCrawler()->filterXpath("//div[@class='gameInfo-list']/div/strong[text()='Developer']/../a")->each(function ($node, $i) use (&$developers) {
+            $this->crawler->filterXpath("//div[@class='gameInfo-list']/div/strong[text()='Developer']/../a")->each(function ($node, $i) use (&$developers) {
                 $developers[] = trim(strip_tags($node->nodeValue));
             });
         } catch (\Exception $e) {
@@ -188,8 +205,7 @@ class Game
     {
         if (null === $this->crawler) {
             $client = new Browser();
-
-            $this->crawler = new Crawler($client->get($this->url)->getContent());
+            $this->crawler = new Crawler($client->get($this->url, $this->headers)->getContent());
         }
 
         return $this->crawler; 
