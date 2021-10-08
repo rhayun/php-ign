@@ -3,6 +3,7 @@
 namespace IGN;
 
 use Buzz\Browser;
+use Buzz\Client\Curl;
 use Symfony\Component\DomCrawler\Crawler;
 
 class Game
@@ -13,7 +14,7 @@ class Game
     /**
      * @var array
      */
-    protected $headers = array('User-Agent: firefox');
+    protected $headers = ['User-Agent' => 'firefox'];
 
     /**
      * @var Crawler
@@ -204,8 +205,12 @@ class Game
     protected function getCrawler()
     {
         if (null === $this->crawler) {
-            $client = new Browser();
-            $this->crawler = new Crawler($client->get($this->url, $this->headers)->getContent());
+            $psr17Factory = new \Nyholm\Psr7\Factory\Psr17Factory();
+            $client = new Curl($psr17Factory);
+            $browser = new Browser($client, $psr17Factory);
+
+            $content = $browser->get($this->url, $this->headers)->getBody()->__toString();
+            $this->crawler = new Crawler($content);
         }
 
         return $this->crawler; 
